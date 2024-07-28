@@ -1,0 +1,6 @@
+.idea
+venv
+*.log
+.env
+chromedriver
+chromedriver.exe
