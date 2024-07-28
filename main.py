@@ -17,12 +17,13 @@ from sys import platform
 if platform != "win32":
     from webdriver_manager.chrome import ChromeDriverManager
 
-log_formatter = logging.Formatter('%(asctime)s | %(levelname)s | %(funcName)s - %(message)s')
+
 DRIVER_PATH = os.getenv('DRIVER_PATH')
 BOT_TOKEN = os.getenv("BOT_TOKEN")
 YOUR_ID = os.getenv("YOUR_ID")
 DUOLINGO_LOGIN = os.getenv("DUOLINGO_LOGIN")
 DUOLINGO_PASSWORD = os.getenv("DUOLINGO_PASSWORD")
+
 
 log_formatter = logging.Formatter('%(asctime)s | %(levelname)s | %(funcName)s |: %(message)s')
 my_handler = RotatingFileHandler("duo.log", mode='a', maxBytes=5 * 1024 * 1024,
@@ -37,9 +38,6 @@ stream_handler.setLevel(logging.INFO)
 
 app_log = logging.getLogger('duo_logger')
 app_log.setLevel(logging.DEBUG)
-my_handler.setLevel(logging.INFO)
-app_log = logging.getLogger('root')
-app_log.setLevel(logging.INFO)
 app_log.addHandler(my_handler)
 app_log.addHandler(stream_handler)
 
