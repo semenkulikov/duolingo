@@ -25,7 +25,7 @@ DUOLINGO_LOGIN = os.getenv("DUOLINGO_LOGIN")
 DUOLINGO_PASSWORD = os.getenv("DUOLINGO_PASSWORD")
 
 
-log_formatter = logging.Formatter('%(asctime)s | %(levelname)s | %(funcName)s |: %(message)s')
+log_formatter = logging.Formatter('%(asctime)s | %(levelname)s | %(funcName)s - %(message)s')
 my_handler = RotatingFileHandler("duo.log", mode='a', maxBytes=5 * 1024 * 1024,
                                  backupCount=1, encoding="utf8", delay=0)
 my_handler.setFormatter(log_formatter)
