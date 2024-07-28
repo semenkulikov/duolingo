@@ -1,3 +1,4 @@
+import os
 from datetime import datetime
 from time import sleep
 from telebot import TeleBot
@@ -11,9 +12,19 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
 import logging
 from logging.handlers import RotatingFileHandler
-from webdriver_manager.chrome import ChromeDriverManager
+from sys import platform
+
+if platform != "win32":
+    from webdriver_manager.chrome import ChromeDriverManager
 
 log_formatter = logging.Formatter('%(asctime)s | %(levelname)s | %(funcName)s - %(message)s')
+DRIVER_PATH = os.getenv('DRIVER_PATH')
+BOT_TOKEN = os.getenv("BOT_TOKEN")
+YOUR_ID = os.getenv("YOUR_ID")
+DUOLINGO_LOGIN = os.getenv("DUOLINGO_LOGIN")
+DUOLINGO_PASSWORD = os.getenv("DUOLINGO_PASSWORD")
+
+log_formatter = logging.Formatter('%(asctime)s | %(levelname)s | %(funcName)s |: %(message)s')
 my_handler = RotatingFileHandler("duo.log", mode='a', maxBytes=5 * 1024 * 1024,
                                  backupCount=1, encoding="utf8", delay=0)
 my_handler.setFormatter(log_formatter)
@@ -26,12 +37,15 @@ stream_handler.setLevel(logging.INFO)
 
 app_log = logging.getLogger('duo_logger')
 app_log.setLevel(logging.DEBUG)
+my_handler.setLevel(logging.INFO)
+app_log = logging.getLogger('root')
+app_log.setLevel(logging.INFO)
 app_log.addHandler(my_handler)
 app_log.addHandler(stream_handler)
 
 
 storage = StateMemoryStorage()
-bot = TeleBot(token="7025971926:AAFzTPB5saklj8CZYPsf0RFPdHmKHPjt90I", state_storage=storage)
+bot = TeleBot(token=BOT_TOKEN, state_storage=storage)
 BASE_URL = 'https://www.duolingo.com/'
 WORDS = {
     "рука": "hand",
@@ -72,6 +86,7 @@ def main(lesson_number: int) -> str:
             EC.presence_of_element_located((By.XPATH, xpath))
         )
         cur_button.click()
+
     glob_start_time = datetime.now()
     for _ in range(lesson_number):
         counter = 3
@@ -99,7 +114,12 @@ def main(lesson_number: int) -> str:
                     options.add_argument('--no-sandbox')
                     options.add_argument('--disable-dev-shm-usage')
                     app_log.info("Открываю браузер...")
-                    browser = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=options)
+                    if platform == "win32":
+                        browser = webdriver.Chrome(service=Service(executable_path=DRIVER_PATH),
+                                                   options=options)
+                    else:
+                        browser = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=options)
+
                 except Exception as ex:
                     app_log.error("Какие-то ошибки на старте!", ex)
                     continue
@@ -117,12 +137,12 @@ def main(lesson_number: int) -> str:
                 input_login = WebDriverWait(browser, 100).until(
                     EC.presence_of_element_located((By.XPATH, '//*[@id="web-ui1"]')))
 
-                input_login.send_keys("saifutdinov.semen@gmail.com")
+                input_login.send_keys(DUOLINGO_LOGIN)
 
                 input_pass = WebDriverWait(browser, 2).until(
                     EC.presence_of_element_located((By.XPATH, '//*[@id="web-ui2"]')))
 
-                input_pass.send_keys("Semen_San25!")
+                input_pass.send_keys(DUOLINGO_PASSWORD)
 
                 click_button('//*[@id="overlays"]/div[3]/div/div/form/div[1]/button')
                 try:
@@ -141,12 +161,12 @@ def main(lesson_number: int) -> str:
                     input_login = WebDriverWait(browser, 100).until(
                         EC.presence_of_element_located((By.XPATH, '//*[@id="web-ui1"]')))
 
-                    input_login.send_keys("saifutdinov.semen@gmail.com")
+                    input_login.send_keys(DUOLINGO_LOGIN)
                     # 2  1 16
                     input_pass = WebDriverWait(browser, 2).until(
                         EC.presence_of_element_located((By.XPATH, '//*[@id="web-ui2"]')))
 
-                    input_pass.send_keys("Semen_San25!")
+                    input_pass.send_keys(DUOLINGO_PASSWORD)
 
                     click_button('/html/body/div[2]/div[3]/div/div/form/div[1]/button')
 
@@ -362,10 +382,17 @@ def main(lesson_number: int) -> str:
                     browser.close()
                 except Exception:
                     pass
+                finally:
+                    if platform == "win32":
+                        app_log.debug("Очистка Chrome и Chromedriver...")
+                        os.system("taskkill /f /IM chrome.exe >nul 2>&1")
+                        os.system("taskkill /f /IM chromedriver.exe >nul 2>&1")
             break
         app_log.info(f"{_ + 1} урок пройден!\n")
     glob_stop_time = datetime.now()
-
+    if platform == "win32":
+        os.system("taskkill /f /IM chrome.exe >nul 2>&1")
+        os.system("taskkill /f /IM chromedriver.exe >nul 2>&1")
     glob_time = glob_stop_time - glob_start_time
     result_text += (f"Программа завершила свою работу успешно. Было пройдено {lesson_number} урок (-ов).\n"
                     f"Время работы: {round(glob_time.seconds, 2) // 60} минут\n"
@@ -380,16 +407,17 @@ if __name__ == '__main__':
 
     if len(sys.argv) > 1 and sys.argv[1].isdigit() and int:
         text = main(int(sys.argv[1]))
-        bot.send_message(5194842887, text)
+        bot.send_message(YOUR_ID, text)
     else:
         while True:
             today = datetime.now()
             if today.hour in (8, 9):
                 if today.hour == 9 and today.minute == 0:
                     text = main(15)
-                    bot.send_message(5194842887, text)
+                    bot.send_message(YOUR_ID, text)
                     sleep(60 * 60 * 15)
                 else:
                     sleep(60)
             else:
                 sleep(60 * 60)
+    os.system("pause") if platform == "win32" else os.system("read -n1 -r -p 'Press any key to continue...' key")
