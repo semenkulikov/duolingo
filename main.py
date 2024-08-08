@@ -410,8 +410,13 @@ if __name__ == '__main__':
     import sys
 
     if len(sys.argv) > 1 and sys.argv[1].isdigit() and int:
-        text = main(int(sys.argv[1]))
-        bot.send_message(YOUR_ID, text)
+        if int(sys.argv[1]) == 0:
+            count_lessons = int(input("Введите количество уроков: "))
+            text = main(count_lessons)
+            bot.send_message(YOUR_ID, text)
+        else:
+            text = main(int(sys.argv[1]))
+            bot.send_message(YOUR_ID, text)
     else:
         while True:
             today = datetime.now()
