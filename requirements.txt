@@ -3,3 +3,4 @@ fake-useragent
 selenium
 pyTelegramBotAPI
 webdriver-manager
+python-dotenv

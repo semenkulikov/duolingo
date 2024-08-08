@@ -13,10 +13,16 @@ from selenium.webdriver.support.ui import WebDriverWait
 import logging
 from logging.handlers import RotatingFileHandler
 from sys import platform
+from dotenv import load_dotenv, find_dotenv
 
 if platform != "win32":
     from webdriver_manager.chrome import ChromeDriverManager
 
+
+if not find_dotenv():
+    exit('Переменные окружения не загружены, т.к отсутствует файл .env')
+else:
+    load_dotenv()
 
 DRIVER_PATH = os.getenv('DRIVER_PATH')
 BOT_TOKEN = os.getenv("BOT_TOKEN")
@@ -101,7 +107,7 @@ def main(lesson_number: int) -> str:
                     user_agent = FakeUserAgent().chrome
                     options = webdriver.ChromeOptions()
                     options.add_argument("--disable-infobars")
-                    options.add_argument("--headless=new")
+                    # options.add_argument("--headless=new")
                     options.add_argument("--incognito")
                     options.add_argument(f'--user-agent={user_agent}')
                     options.add_argument("start-maximized")
