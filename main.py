@@ -107,7 +107,7 @@ def main(lesson_number: int) -> str:
                     user_agent = FakeUserAgent().chrome
                     options = webdriver.ChromeOptions()
                     options.add_argument("--disable-infobars")
-                    # options.add_argument("--headless=new")
+                    options.add_argument("--headless=new")
                     options.add_argument("--incognito")
                     options.add_argument(f'--user-agent={user_agent}')
                     options.add_argument("start-maximized")
