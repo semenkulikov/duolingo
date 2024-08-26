@@ -403,6 +403,7 @@ def main(lesson_number: int) -> str:
                     f"Всего заработал: {TOTAL_COUNT} очков\n")
     app_log.info("\n\n=============================================================================\n\n" +
                  result_text + "\n\n")
+    TOTAL_COUNT = 0
     return result_text
 
 
