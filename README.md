@@ -1,5 +1,7 @@
 # Майнер для duolingo.com
 
+Это майнер для duolingo.com, который проходит за вас урок каждый день или по задаче. Один урок - 5 баллов.
+
 ## Installation
 1. Клонируйте репозиторий - `git clone https://github.com/semenkulikov/duolingo.git`
 2. Установите зависимости - `pip install -r requirements.txt`
