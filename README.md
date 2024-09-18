@@ -13,4 +13,6 @@
 # Стек
 * Python
 * PyTelegramBotAPI
-* 
+* Selenium
+* webdriver-manager
+* requests
