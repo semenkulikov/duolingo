@@ -16,3 +16,5 @@
 * Selenium
 * webdriver-manager
 * requests
+* python-dotenv
+* fake-useragent
