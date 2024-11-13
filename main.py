@@ -363,7 +363,7 @@ def main(lesson_number: int) -> str:
                                 cur_button_2.click()
                                 break
                     else:
-                        app_log.warning("WARNING! Нет слова {cur_text_1.text} в словаре!")
+                        app_log.warning(f"WARNING! Нет слова {cur_text_1.text} в словаре!")
                         is_not_work = True
                 if is_not_work:
                     # browser.close()
@@ -406,6 +406,9 @@ def main(lesson_number: int) -> str:
     if platform == "win32":
         os.system("taskkill /f /IM chrome.exe >nul 2>&1")
         os.system("taskkill /f /IM chromedriver.exe >nul 2>&1")
+    else:
+        os.system("killall chrome")
+        os.system("killall chromedriver")
     glob_time = glob_stop_time - glob_start_time
     result_text += (f"Программа завершила свою работу успешно. Было пройдено {lesson_number} урок (-ов).\n"
                     f"Время работы: {round(glob_time.seconds, 2) // 60} минут\n"
