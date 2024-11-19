@@ -82,8 +82,6 @@ def human_like_behavior(driver):
 
     def move_mouse_randomly():
         app_log.debug("Имитирую движения курсора мыши...")
-        width = driver.execute_script("return window.innerWidth;")
-        height = driver.execute_script("return window.innerHeight;")
         for _ in range(random.randint(5, 20)):
             x = random.randint(1 * _, 10 * _)
             y = random.randint(2 * _, 10 * _)
