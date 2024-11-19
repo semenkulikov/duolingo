@@ -13,6 +13,8 @@ import logging
 from logging.handlers import RotatingFileHandler
 from sys import platform
 from dotenv import load_dotenv, find_dotenv
+import random
+from selenium.webdriver.common.action_chains import ActionChains
 
 if platform != "win32":
     from webdriver_manager.chrome import ChromeDriverManager
@@ -38,7 +40,7 @@ my_handler.setLevel(logging.DEBUG)
 
 stream_handler = logging.StreamHandler()
 stream_handler.setFormatter(log_formatter)
-stream_handler.setLevel(logging.INFO)
+stream_handler.setLevel(logging.DEBUG)
 
 
 app_log = logging.getLogger('duo_logger')
@@ -71,6 +73,55 @@ WORDS = {
     "где": "where"
 }
 TOTAL_COUNT = 0
+SLEEP_SEC_COUNT = 0  # Общий уровень скорости программы. 0 - самый быстрый, 1 - более менее,
+# 2 - средний, 3 - медленный, и так далее
+
+def human_like_behavior(driver):
+    action = ActionChains(driver)
+    app_log.info("Начинаю имитацию действий пользователя.")
+
+    def move_mouse_randomly():
+        app_log.debug("Имитирую движения курсора мыши...")
+        width = driver.execute_script("return window.innerWidth;")
+        height = driver.execute_script("return window.innerHeight;")
+        for _ in range(random.randint(5, 20)):
+            x = random.randint(1 * _, 10 * _)
+            y = random.randint(2 * _, 10 * _)
+            try:
+                action.move_by_offset(x, y).perform()
+            except Exception:
+                app_log.debug(f"По координатам x={x} y={y} не удалось переместить курсор!")
+            sleep(random.uniform(0.5, 1.5))
+
+    # def random_click():
+    #     app_log.debug("Имитирую рандомные клики...")
+    #     elements = WebDriverWait(driver, 100).until(
+    #             EC.presence_of_element_located((By.XPATH, '//*')))
+    #     random.choice(elements)
+    #     sleep(random.uniform(0.5, 1.5))
+
+    def random_scroll():
+        app_log.debug("Имитирую рандомные прокрутки страницы...")
+        for _ in range(random.randint(1, 3)):
+            scroll_value = random.randint(-300, 300)
+            driver.execute_script(f"window.scrollBy(0, {scroll_value});")
+            sleep(random.uniform(0.5, 1.5))
+
+    def type_text(element, text):
+        app_log.debug("Имитирую ввод текста в поле...")
+        for char in text:
+            element.send_keys(char)
+            sleep(random.uniform(0.1, 0.3))
+
+    # Имитируем поведение
+    move_mouse_randomly()
+    # random_click()
+    random_scroll()
+
+    # # Пример ввода текста в поле поиска (замените на ваше)
+    # search_box = driver.find_element_by_name("q")  # Убедитесь, что элемент существует на странице
+    # type_text(search_box, "Selenium human-like behavior")
+
 
 
 def main(lesson_number: int) -> str:
@@ -104,30 +155,16 @@ def main(lesson_number: int) -> str:
 
         app_log.info("Авторизация...")
         # Нажимаю на У меня есть аккаунт.
-        click_button('/html/body/div[1]/div[1]/header/div[2]/div[2]/div/button', 10)
-        # input_login = WebDriverWait(browser, 100).until(
-        #     EC.presence_of_element_located((By.XPATH, '//*[@id="web-ui1"]')))
-        #
-        # input_login.send_keys(DUOLINGO_LOGIN)
-        #
-        # input_pass = WebDriverWait(browser, 2).until(
-        #     EC.presence_of_element_located((By.XPATH, '//*[@id="web-ui2"]')))
-        #
-        # input_pass.send_keys(DUOLINGO_PASSWORD)
-        #
-        # click_button('//*[@id="overlays"]/div[3]/div/div/form/div[1]/button')
-        # try:
-        #     click_button('/html/body/div[6]/div[2]/div[1]/div[2]/div[2]/button[1]', 2)
-        # except Exception:
-        #     pass
-        # else:
-        #     break
+        click_button('/html/body/div[1]/div[1]/header/div[2]/div[2]/div/button', 20)
 
+        # Имитирую действия настоящего юзера
+        human_like_behavior(browser)
         while True:
             input_login = WebDriverWait(browser, 100).until(
                 EC.presence_of_element_located((By.XPATH, '//*[@id="web-ui1"]')))
 
             input_login.send_keys(DUOLINGO_LOGIN)
+            sleep(2)
             # 2  1 16
             input_pass = WebDriverWait(browser, 2).until(
                 EC.presence_of_element_located((By.XPATH, '//*[@id="web-ui2"]')))
@@ -135,16 +172,18 @@ def main(lesson_number: int) -> str:
             input_pass.send_keys(DUOLINGO_PASSWORD)
 
             click_button('/html/body/div[2]/div[3]/div/div/form/div[1]/button')
-            sleep(3)
+            sleep(5)
             try:
                 # Находим элемент Не получилось войти с первого раза
                 except_auth = WebDriverWait(browser, 2).until(
                     EC.presence_of_element_located((By.XPATH,
                                                     f'/html/body/div[2]/div[3]/div/div/form/div[1]/div[2]/div'))
                 )
+                sleep(2)
                 if except_auth.text == "Неверный пароль. Повторите попытку.":
-                    app_log.warning("Не получилось авторизоваться с первого раза!")
+                    app_log.warning("Авторизация не прошла!")
                     browser.get("https://www.duolingo.com/?isLoggingIn=true")
+                    sleep(2)
                     click_button('/html/body/div[1]/div[1]/header/div[2]/div[2]/div/button', 10)
                 else:
                     break
@@ -158,7 +197,7 @@ def main(lesson_number: int) -> str:
         options = webdriver.ChromeOptions()
         options.add_argument("--disable-infobars")
         # options.add_argument("--headless=new")
-        options.add_argument("--incognito")
+        # options.add_argument("--incognito")
         options.add_argument(f'--user-agent={user_agent}')
         options.add_argument("start-maximized")
         options.add_experimental_option("excludeSwitches", ["enable-automation"])
@@ -186,23 +225,25 @@ def main(lesson_number: int) -> str:
             try:
                 start_time = datetime.now()
 
-                browser.set_page_load_timeout(100)
+                browser.set_page_load_timeout(200)
                 try:
                     browser.get("https://www.duolingo.com/lesson/unit/6/level/2")
                     app_log.info("Урок успешно загружен!")
                 except Exception:
                     app_log.warning("Превышен таймаут!")
-                sleep(4)
+                sleep(4 + SLEEP_SEC_COUNT)
 
+                app_log.debug("Нажимаю 'Начать историю'")
                 click_button('//*[@id="root"]/div[1]/div/div/div/div[3]/button')
-                sleep(1)
+                sleep(1 + SLEEP_SEC_COUNT)
+                app_log.debug("0 этап - запуск урока")
                 click_button('//*[@id="root"]/div[1]/div/div/div[3]/div/div/div/button')
-                sleep(4)
+                sleep(4 + SLEEP_SEC_COUNT)
 
                 app_log.debug("1 этап - где мой паспорт")
 
                 click_button('//*[@id="root"]/div[1]/div/div/div[3]/div/div/div/button')
-                sleep(4)
+                sleep(4 + SLEEP_SEC_COUNT)
                 for i in range(1, 4):
                     cur_button = WebDriverWait(browser, 2).until(
                         EC.presence_of_element_located((By.XPATH,
@@ -214,15 +255,15 @@ def main(lesson_number: int) -> str:
                         break
 
                 click_button('//*[@id="root"]/div[1]/div/div/div[3]/div/div[2]/div/button')
-                sleep(2)
+                sleep(2 + SLEEP_SEC_COUNT)
 
                 app_log.debug("2 этап - поиски")
 
                 click_button('//*[@id="root"]/div[1]/div/div/div[3]/div/div/div/button')
                 click_button('//*[@id="root"]/div[1]/div/div/div[3]/div/div/div/button')
-                sleep(2)
+                sleep(2 + SLEEP_SEC_COUNT)
                 click_button('//*[@id="root"]/div[1]/div/div/div[3]/div/div/div/button')
-                sleep(2)
+                sleep(2 + SLEEP_SEC_COUNT)
 
                 app_log.debug("3 этап - выбор чекбокса 'Да, это правда'")
 
@@ -243,14 +284,14 @@ def main(lesson_number: int) -> str:
                         break
 
                 click_button('//*[@id="root"]/div[1]/div/div/div[3]/div/div[2]/div/button', 3)
-                sleep(1)
+                sleep(1 + SLEEP_SEC_COUNT)
 
                 app_log.debug("4 этап - выбор варианта 'бежит'")
 
                 click_button('//*[@id="root"]/div[1]/div/div/div[3]/div/div/div/button')
-                sleep(3)
+                sleep(3 + SLEEP_SEC_COUNT)
                 click_button('//*[@id="root"]/div[1]/div/div/div[3]/div/div/div/button')
-                sleep(2)
+                sleep(2 + SLEEP_SEC_COUNT)
                 click_button('//*[@id="root"]/div[1]/div/div/div[3]/div/div/div/button')
 
                 for i in range(1, 8, 2):
@@ -266,25 +307,26 @@ def main(lesson_number: int) -> str:
                     )
                     if cur_text.text == "runs":
                         cur_button.click()
+                        sleep(SLEEP_SEC_COUNT)
                         break
 
                 click_button('//*[@id="root"]/div[1]/div/div/div[3]/div/div[2]/div/button')
-                sleep(1)
+                sleep(1 + SLEEP_SEC_COUNT)
 
                 app_log.debug("5 этап - разговоры")
 
                 click_button('//*[@id="root"]/div[1]/div/div/div[3]/div/div/div/button')
-                sleep(2)
+                sleep(2 + SLEEP_SEC_COUNT)
                 click_button('//*[@id="root"]/div[1]/div/div/div[3]/div/div/div/button')
-                sleep(4)
+                sleep(4 + SLEEP_SEC_COUNT)
                 click_button('//*[@id="root"]/div[1]/div/div/div[3]/div/div/div/button')
-                sleep(2)
+                sleep(2 + SLEEP_SEC_COUNT)
                 click_button('//*[@id="root"]/div[1]/div/div/div[3]/div/div/div/button')
-                sleep(1)
+                sleep(1 + SLEEP_SEC_COUNT)
                 click_button('//*[@id="root"]/div[1]/div/div/div[3]/div/div/div/button')
-                sleep(4)
+                sleep(4 + SLEEP_SEC_COUNT)
                 click_button('//*[@id="root"]/div[1]/div/div/div[3]/div/div/div/button')
-                sleep(5)
+                sleep(5 + SLEEP_SEC_COUNT)
                 click_button('//*[@id="root"]/div[1]/div/div/div[3]/div/div/div/button')
 
                 app_log.debug("6 этап - выбор варианта 'рука'")
@@ -302,15 +344,16 @@ def main(lesson_number: int) -> str:
                     )
                     if cur_text.text == "hand":
                         cur_button.click()
+                        sleep(SLEEP_SEC_COUNT)
                         break
 
                 click_button('//*[@id="root"]/div[1]/div/div/div[3]/div/div/div/button')
-                sleep(2)
+                sleep(2 + SLEEP_SEC_COUNT)
 
                 app_log.debug("7 этап - выбор варианта 'У него в руке'")
 
                 click_button('//*[@id="root"]/div[1]/div/div/div[3]/div/div/div/button')
-                sleep(2)
+                sleep(2 + SLEEP_SEC_COUNT)
                 click_button('//*[@id="root"]/div[1]/div/div/div[3]/div/div/div/button')
 
                 for i in range(1, 4):
@@ -326,10 +369,11 @@ def main(lesson_number: int) -> str:
                     )
                     if cur_text.text == "У него в руке.":
                         cur_button.click()
+                        sleep(SLEEP_SEC_COUNT)
                         break
 
                 click_button('//*[@id="root"]/div[1]/div/div/div[3]/div/div[2]/div/button')
-                sleep(1)
+                sleep(1 + SLEEP_SEC_COUNT)
 
                 app_log.debug("8 этап (заключительный) - сопоставление слов.")
 
@@ -360,7 +404,9 @@ def main(lesson_number: int) -> str:
                             )
                             if WORDS[cur_text_1.text] == cur_text_2.text:
                                 cur_button_1.click()
+                                sleep(SLEEP_SEC_COUNT)
                                 cur_button_2.click()
+                                sleep(SLEEP_SEC_COUNT)
                                 break
                     else:
                         app_log.warning(f"WARNING! Нет слова {cur_text_1.text} в словаре!")
@@ -371,7 +417,7 @@ def main(lesson_number: int) -> str:
 
                 click_button('//*[@id="root"]/div[1]/div/div/div[3]/div/div[2]/div/button')
                 app_log.debug("8 этап - закончен")
-                sleep(4)
+                sleep(4 + SLEEP_SEC_COUNT)
                 click_button('//*[@id="root"]/div[1]/div/div/div[2]/div/div/div/button')
                 # click_button('//*[@id="root"]/div[1]/div/div/div[2]/div/div/div/button')
                 # click_button('//*[@id="root"]/div[1]/div/div/div[2]/div/div/div/button')
@@ -388,6 +434,7 @@ def main(lesson_number: int) -> str:
             #     browser.close()
         except Exception as ex:
             app_log.critical(f"CRITICAL ERROR! Пинг упал до критического значения!\n{ex}")
+            TOTAL_COUNT += 1
             continue
         # finally:
         #     app_log.info("Закрываю браузер...")

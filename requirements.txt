@@ -1,6 +1,6 @@
 requests
-fake-useragent
-selenium
-pyTelegramBotAPI
-webdriver-manager
-python-dotenv
+fake-useragent~=1.5.1
+selenium~=4.23.1
+pyTelegramBotAPI~=4.21.0
+webdriver-manager~=4.0.2
+python-dotenv~=1.0.1
