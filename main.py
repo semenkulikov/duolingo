@@ -445,8 +445,8 @@ def main(lesson_number: int) -> str:
         #             app_log.debug("Очистка Chrome и Chromedriver...")
         #             os.system("taskkill /f /IM chrome.exe >nul 2>&1")
         #             os.system("taskkill /f /IM chromedriver.exe >nul 2>&1")
-        counter += 1
         app_log.info(f"{counter + 1} урок пройден!\n")
+        counter += 1
     glob_stop_time = datetime.now()
     if platform == "win32":
         os.system("taskkill /f /IM chrome.exe >nul 2>&1")
